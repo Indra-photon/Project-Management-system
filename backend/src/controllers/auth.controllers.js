@@ -119,15 +119,13 @@ const registerUser =  asyncHandler(async(req, res) => {
     await createdUser.save({ validateBeforeSave: false })
 
     // send the email
-
     const verificationUrl = `${process.env.BASE_URL}/api/v1/users/verify-email/?token=${unhashedToken}`
-    console.log(unhashedToken)
     const verificationemailgenContent = emailVerificationmailgenContent(createdUser.username, verificationUrl)
     await mailgen({
         email: createdUser.email,
         subject: "Verify your email",
         mailgenContent: verificationemailgenContent
-      });
+    });
 
 
     return res.status(201).json(

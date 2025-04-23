@@ -24,10 +24,12 @@ db();
 
 import healthCheckRouter from './routes/healthcheck.routes.js'
 import userRoutes from './routes/auth.routes.js'
+import projectRoutes from './routes/project.routes.js'
 
 
 app.use("/api/v1/healthcheck", healthCheckRouter)
 app.use("/api/v1/users", userRoutes)
+app.use("/api/v1/projects", projectRoutes)
 
 app.use(errorHandler)
 

@@ -47,9 +47,9 @@ const emailVerificationmailgenContent = (username, verificationUrl) => {
             action: {
                 instructions: 'To get started with Our App, please click here:',
                 button: {
-                    color: '#22BC66', 
-                    text: 'Verify your email',
-                    link: verificationUrl
+                    color: '#22BC66', // button colour
+                    text: 'Verify your email', // text on the button
+                    link: verificationUrl // Link to verify user
                 } 
         },
          outro: 'Need help, or have questions? Just reply to this email, we\'d love to help.'
