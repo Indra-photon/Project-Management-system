@@ -2,6 +2,7 @@ import { ApiError } from "../utils/api-error.js";
 import {ApiResponse} from '../utils/api-response.js'
 import { asyncHandler } from "../utils/async-handler.js";
 import { Project } from "../models/project.models.js";
+import { User } from "../models/user.models.js";
 import { ProjectMember } from "../models/projectmember.models.js";
 
 const createProject = asyncHandler(async (req, res) => {
@@ -51,7 +52,7 @@ const deleteProject = asyncHandler(async (req, res) => {
     if(!projectMember) {
         throw new ApiError(403, "You are not a member of this project!");
     }
-    if(projectMember.role !== "admin") {
+    if(projectMember.role !== "project_admin" || projectMember.role !== "admin") {
         throw new ApiError(403, "You are not authorized to delete this project!");
     }
     const projectDelete = await Project.findByIdAndDelete(id)
@@ -77,7 +78,7 @@ const updateProject = asyncHandler(async (req, res) => {
     if(!projectMember) {
         throw new ApiError(403, "You are not a member of this project!");
     }
-    if(projectMember.role !== "admin") {
+    if(projectMember.role !== "project_admin" || projectMember.role !== "admin") {
         throw new ApiError(403, "You are not authorized to update this project!");
     }
 
@@ -112,7 +113,7 @@ const addProjectMember = asyncHandler(async (req, res) => {
     if(!projectMember) {
         throw new ApiError(403, "You are not a member of this project!");
     }
-    if(projectMember.role !== "admin") {
+    if(projectMember.role !== "project_admin") {
         throw new ApiError(403, "You are not authorized to add members to this project!");
     }
     const { memberId } = req.body
@@ -149,7 +150,7 @@ const deleteProjectMember = asyncHandler(async (req, res) => {
     if(!projectMember) {
         throw new ApiError(403, "You are not a member of this project!");
     }
-    if(projectMember.role !== "admin") {
+    if(projectMember.role !== "project_admin") {
         throw new ApiError(403, "You are not authorized to delete members from this project!");
     }
     const projectMemberDelete = await ProjectMember.findByIdAndDelete(id) 
@@ -175,8 +176,15 @@ const getProjectById = asyncHandler(async (req, res) => {
     if(!id) {
         throw new ApiError(400, "Please provide a project id!");
     }
+    const user = User.findById(userId)
+    if(!user) {
+        throw new ApiError(404, "User not found!");
+    }
+    if(user.role !== "project_admin" || user.role !== "admin") {
+        throw new ApiError(403, "You are not authorized to view all projects!");
+    }
 
-    const project = await Project.findOne({ project: id })
+    const project = await Project.findById(id)
     if(!project) {
         throw new ApiError(404, "Project not found!");
     }
@@ -216,7 +224,7 @@ const updateMemberRole = asyncHandler(async (req, res) => {
     if(!projectMember) {
         throw new ApiError(403, "You are not a member of this project!");
     }
-    if(projectMember.role !== "admin") {
+    if(projectMember.role !== "project_admin") {
         throw new ApiError(403, "You are not authorized to update members in this project!");
     }
     const { memberId, role } = req.body 
@@ -248,6 +256,14 @@ const getAllProjects = asyncHandler(async (req, res) => {
 
     if(!userId) {
         throw new ApiError(401, "Unauthorized request! Please login first.");
+    }
+
+    const user = User.findById(userId)
+    if(!user) {
+        throw new ApiError(404, "User not found!");
+    }
+    if(user.role !== "admin") {
+        throw new ApiError(403, "You are not authorized to view all projects!");
     }
 
     const projects = await Project.find({})

@@ -24,7 +24,7 @@ const createTask = asyncHandler(async (req, res) => {
     if(!projectMember) {
         throw new ApiError(403, "You are not a member of this project!");
     }
-    if(projectMember.role !== "admin") {
+    if(projectMember.role !== "project_admin") {
         throw new ApiError(403, "You are not authorized to create a task in this project!");
     }
     const assignedUser = await User.findById(assignedTo)
@@ -67,7 +67,7 @@ const deleteTask = asyncHandler(async (req, res) => {
     if(!projectMember) {
         throw new ApiError(403, "You are not a member of this project!");
     }
-    if(projectMember.role !== "admin") {
+    if(projectMember.role !== "project_admin") {
         throw new ApiError(403, "You are not authorized to delete this task!");
     }
     const taskDelete = await Task.findByIdAndDelete(id)
@@ -99,7 +99,7 @@ const updateTask = asyncHandler(async (req, res) => {
     if(!projectMember) {
         throw new ApiError(403, "You are not a member of this project!");
     }
-    if(projectMember.role !== "admin") {
+    if(projectMember.role !== "project_admin") {
         throw new ApiError(403, "You are not authorized to update this task!");
     }
     
@@ -111,18 +111,6 @@ const updateTask = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, updatedTask, "Task updated successfully!"))
 })
 
-const getAllTasks = asyncHandler(async (req, res) => {
-    const userId = req.user._id
-    if(!userId) {
-        throw new ApiError(401, "Unauthorized request! Please login first.");
-    }
-    const tasks = await Task.find({}).populate("assignedTo").populate("assignedBy").populate("project")
-    if(!tasks) {
-        throw new ApiError(404, "No tasks found!");
-    }
-    return res.status(200).json(new ApiResponse(200, tasks, "Tasks fetched successfully!")) 
-})
-
 const getTaskById = asyncHandler(async (req, res) => {
     const {id} = req.params
     const userId = req.user._id
@@ -131,6 +119,13 @@ const getTaskById = asyncHandler(async (req, res) => {
     }
     if(!id) {
         throw new ApiError(400, "Please provide a task id!");
+    }
+    const user = User.findById(userId)
+    if(!user) {
+        throw new ApiError(404, "User not found!");
+    }
+    if(user.role !== "project_admin"){
+        throw new ApiError(403, "You are not authorized to view this task!");
     }
     const task = await Task.findById(id).populate("assignedTo").populate("assignedBy").populate("project")
     if(!task) {

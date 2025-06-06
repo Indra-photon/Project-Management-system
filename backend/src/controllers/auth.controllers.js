@@ -8,6 +8,7 @@ import {mailgen,
     forgotPasswordmailgenContent}  from '../utils/mail.js'
 
 import crypto from 'crypto'
+import { ApiKey } from "../models/apiKey.models.js"
 
 const generateAccessAndRefereshTokens = async(userId) =>{
     console.log(userId)
@@ -402,6 +403,40 @@ const updateprofile = asyncHandler(async(req, res) => {
       .json(new ApiResponse(200, updatedUser, "Profile updated successfully"));
 })
 
+const generateApiKey = asyncHandler(async (req, res) => {
+    const { name } = req.body
+    const userId = req.user._id
+    
+    if (!name) {
+        throw new ApiError(400, "API key name is required")
+    }
+    
+    const existingKeys = await ApiKey.countDocuments({ 
+        user: userId, 
+        isActive: true 
+    })
+    
+    if (existingKeys >= 5) {
+        throw new ApiError(400, "Maximum API key limit reached (5)")
+    }
+    
+    const apiKeyDoc = new ApiKey({
+        user: userId,
+        name: name.trim()
+    })
+    
+    const apiKey = apiKeyDoc.generateApiKey()
+    await apiKeyDoc.save()
+    
+    return res.status(201).json(
+        new ApiResponse(201, {
+            // api_key: apiKey,
+            name: apiKeyDoc.name,
+            created_at: apiKeyDoc.createdAt
+        }, "API key generated successfully")
+    )
+})
+
 
 
 
@@ -418,5 +453,6 @@ export {
     passwordReset,
     getMe,
     logoutUser,
-    updateprofile
+    updateprofile,
+    generateApiKey
 }
